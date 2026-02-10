@@ -147,7 +147,7 @@ function GambleBoard.StartCrashRound()
     }
 
     GambleBoard.BroadcastCrashState()
-    GambleBoard.Log("Crash round #" .. roundCounter .. " betting phase (crash at " .. GambleBoard.CrashRound.crashPoint .. "x)")
+    GambleBoard.Log("Crash round #" .. roundCounter .. " betting phase started")
 
     -- After betting time, start running
     timer.Create("GambleBoard_CrashBetting", GambleBoard.Config.CrashBettingTime, 1, function()
@@ -358,11 +358,13 @@ end
 -------------------------------------------------
 
 net.Receive("GambleBoard_CrashBet", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "CrashBet", 1) then return end
     local amount = net.ReadInt(32)
     GambleBoard.CrashPlaceBet(ply, amount)
 end)
 
 net.Receive("GambleBoard_CrashCashout", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "CrashCashout", 0.5) then return end
     GambleBoard.CrashCashOut(ply)
 end)
 

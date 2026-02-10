@@ -58,6 +58,26 @@ function GambleBoard.Log(msg)
 end
 
 -------------------------------------------------
+-- Rate limiting
+-------------------------------------------------
+
+local netCooldowns = {}
+
+function GambleBoard.NetThrottle(ply, action, cooldown)
+    local sid = ply:SteamID()
+    netCooldowns[sid] = netCooldowns[sid] or {}
+    if netCooldowns[sid][action] and netCooldowns[sid][action] > CurTime() then
+        return false
+    end
+    netCooldowns[sid][action] = CurTime() + cooldown
+    return true
+end
+
+hook.Add("PlayerDisconnected", "GambleBoard_ThrottleCleanup", function(ply)
+    netCooldowns[ply:SteamID()] = nil
+end)
+
+-------------------------------------------------
 -- Permission check
 -------------------------------------------------
 
@@ -90,6 +110,8 @@ end
 -------------------------------------------------
 
 net.Receive("GambleBoard_RequestData", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "RequestData", 2) then return end
+
     -- Send coin lobbies
     GambleBoard.SendCoinLobbies(ply)
 
@@ -199,6 +221,8 @@ function GambleBoard.SendPlayerStats(ply)
 end
 
 net.Receive("GambleBoard_RequestLeaderboard", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "RequestLeaderboard", 2) then return end
+
     local category = net.ReadString()
     if category ~= "totalWon" and category ~= "totalLost" and category ~= "gamesPlayed" then
         category = "totalWon"

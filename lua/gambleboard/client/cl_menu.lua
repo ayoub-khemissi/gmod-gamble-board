@@ -70,7 +70,7 @@ tailwind.config = {
 </head>
 <body>
 
-<div id="app" class="h-screen flex flex-col animate-[overlayIn_0.2s_ease]" style="background: rgba(0,0,0,0.85);">
+<div id="app" class="h-screen flex flex-col animate-[overlayIn_0.2s_ease]" style="background: rgba(0,0,0,0.8);">
   <div class="max-w-7xl w-full mx-auto flex flex-col flex-1 overflow-hidden">
 
     <!-- Header -->
@@ -1290,7 +1290,7 @@ function showNotification(msg, type) {
 
     const el = document.createElement('div');
     el.className = `flex items-center gap-3 px-4 py-3 rounded-lg border ${c.bg} ${c.border} backdrop-blur-sm toast-in`;
-    el.innerHTML = `<i class="fa-solid ${icon} ${c.icon} text-base shrink-0"></i><span class="${c.text} text-sm font-medium">${msg}</span>`;
+    el.innerHTML = `<i class="fa-solid ${icon} ${c.icon} text-base shrink-0"></i><span class="${c.text} text-sm font-medium">${escHtml(msg)}</span>`;
 
     container.appendChild(el);
 
@@ -1504,9 +1504,7 @@ function GambleBoard.OpenMenu()
         if v ~= "" then hasAny = true break end
     end
     if hasAny then
-        local json = util.TableToJSON(saved)
-        json = string.gsub(json, "'", "\\'")
-        dhtml:QueueJavascript("restoreParams('" .. json .. "')")
+        dhtml:QueueJavascript("restoreParams('" .. safeJSON(saved) .. "')")
     end
 end
 
@@ -1516,8 +1514,19 @@ end
 
 local function safeJSON(data)
     local json = util.TableToJSON(data)
+    json = string.gsub(json, "\\", "\\\\")
     json = string.gsub(json, "'", "\\'")
+    json = string.gsub(json, "\n", "\\n")
+    json = string.gsub(json, "\r", "\\r")
     return json
+end
+
+local function safeStr(str)
+    str = string.gsub(str, "\\", "\\\\")
+    str = string.gsub(str, "'", "\\'")
+    str = string.gsub(str, "\n", "\\n")
+    str = string.gsub(str, "\r", "\\r")
+    return str
 end
 
 local function queueJS(code)
@@ -1532,20 +1541,20 @@ end
 -- Coin lobbies (full list)
 net.Receive("GambleBoard_CoinList", function()
     local json = net.ReadString()
-    queueJS("setCoinLobbies('" .. string.gsub(json, "'", "\\'") .. "')")
+    queueJS("setCoinLobbies('" .. safeStr(json) .. "')")
 end)
 
 -- Coin update (single lobby)
 net.Receive("GambleBoard_CoinUpdate", function()
     local action = net.ReadString()
     local json = net.ReadString()
-    queueJS("updateCoinLobby('" .. string.gsub(json, "'", "\\'") .. "', '" .. action .. "')")
+    queueJS("updateCoinLobby('" .. safeStr(json) .. "', '" .. safeStr(action) .. "')")
 end)
 
 -- Crash state
 net.Receive("GambleBoard_CrashState", function()
     local json = net.ReadString()
-    queueJS("setCrashState('" .. string.gsub(json, "'", "\\'") .. "')")
+    queueJS("setCrashState('" .. safeStr(json) .. "')")
 end)
 
 -- Crash tick
@@ -1558,13 +1567,13 @@ end)
 -- Crash history
 net.Receive("GambleBoard_CrashHistory", function()
     local json = net.ReadString()
-    queueJS("setCrashHistory('" .. string.gsub(json, "'", "\\'") .. "')")
+    queueJS("setCrashHistory('" .. safeStr(json) .. "')")
 end)
 
 -- Tower state
 net.Receive("GambleBoard_TowerState", function()
     local json = net.ReadString()
-    queueJS("setTowerState('" .. string.gsub(json, "'", "\\'") .. "')")
+    queueJS("setTowerState('" .. safeStr(json) .. "')")
 end)
 
 -- Tower jackpot
@@ -1576,7 +1585,7 @@ end)
 -- Player stats
 net.Receive("GambleBoard_SendPlayerStats", function()
     local json = net.ReadString()
-    queueJS("setPlayerStats('" .. string.gsub(json, "'", "\\'") .. "')")
+    queueJS("setPlayerStats('" .. safeStr(json) .. "')")
 end)
 
 -- Leaderboard
@@ -1585,7 +1594,7 @@ net.Receive("GambleBoard_SendLeaderboard", function()
     local json = net.ReadString()
     local myRank = net.ReadInt(32)
     local myValue = net.ReadInt(32)
-    queueJS("setLeaderboard('" .. string.gsub(json, "'", "\\'") .. "', '" .. category .. "', " .. myRank .. ", " .. myValue .. ")")
+    queueJS("setLeaderboard('" .. safeStr(json) .. "', '" .. safeStr(category) .. "', " .. myRank .. ", " .. myValue .. ")")
 end)
 
 -------------------------------------------------

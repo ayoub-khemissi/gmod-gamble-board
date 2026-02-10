@@ -307,17 +307,20 @@ end
 -------------------------------------------------
 
 net.Receive("GambleBoard_CoinCreate", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "CoinCreate", 1) then return end
     local amount = net.ReadInt(32)
     local choice = net.ReadString()
     GambleBoard.CreateCoinLobby(ply, amount, choice)
 end)
 
 net.Receive("GambleBoard_CoinJoin", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "CoinJoin", 1) then return end
     local lobbyId = net.ReadString()
     GambleBoard.JoinCoinLobby(ply, lobbyId)
 end)
 
 net.Receive("GambleBoard_CoinCancel", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "CoinCancel", 1) then return end
     local lobbyId = net.ReadString()
     GambleBoard.CancelCoinLobby(ply, lobbyId)
 end)
@@ -330,10 +333,13 @@ hook.Add("PlayerDisconnected", "GambleBoard_CoinCleanup", function(ply)
     local sid = ply:SteamID()
     for id, lobby in pairs(GambleBoard.CoinLobbies) do
         if lobby.creatorSteamID == sid and lobby.status == "waiting" then
-            -- Refund is already handled by disconnect (money is on the player)
-            -- Just remove the lobby
+            -- Refund the bet before they disconnect (money was already deducted)
+            if IsValid(ply) and ply.addMoney then
+                ply:addMoney(lobby.amount)
+            end
             GambleBoard.BroadcastCoinUpdate(lobby, "remove")
             GambleBoard.CoinLobbies[id] = nil
+            GambleBoard.Log(ply:Nick() .. " disconnected, refunded coin duel #" .. id .. " (" .. lobby.amount .. ")")
         end
     end
 end)

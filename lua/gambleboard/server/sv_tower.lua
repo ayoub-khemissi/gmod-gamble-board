@@ -288,16 +288,19 @@ end
 -------------------------------------------------
 
 net.Receive("GambleBoard_TowerStart", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "TowerStart", 1) then return end
     local amount = net.ReadInt(32)
     GambleBoard.StartTower(ply, amount)
 end)
 
 net.Receive("GambleBoard_TowerPick", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "TowerPick", 0.5) then return end
     local door = net.ReadInt(8)
     GambleBoard.TowerPickDoor(ply, door)
 end)
 
 net.Receive("GambleBoard_TowerCashout", function(len, ply)
+    if not GambleBoard.NetThrottle(ply, "TowerCashout", 1) then return end
     GambleBoard.TowerCashOut(ply)
 end)
 
