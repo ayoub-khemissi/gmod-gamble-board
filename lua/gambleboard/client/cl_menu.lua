@@ -994,6 +994,8 @@ function renderTower() {
         floorsHtml += '</div></div>';
     }
     document.getElementById('tower-floors').innerHTML = floorsHtml;
+    let pageTower = document.getElementById('page-tower');
+    if (pageTower) pageTower.scrollTop = pageTower.scrollHeight;
 }
 
 function startTower() {
