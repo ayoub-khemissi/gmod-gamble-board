@@ -98,7 +98,7 @@ tailwind.config = {
                 <i class="fa-solid fa-chart-bar text-xs"></i> {{TabStats}}
             </button>
         </div>
-        <button onclick="gb.closeMenu()" class="w-9 h-9 rounded-lg flex items-center justify-center text-gb-text2 hover:text-gb-text hover:bg-white/10 transition shrink-0">
+        <button onclick="gb.closeMenu()" class="w-9 h-9 rounded-lg flex items-center justify-center bg-black text-white hover:bg-white hover:text-black transition shrink-0">
             <i class="fa-solid fa-xmark text-lg"></i>
         </button>
     </div>
@@ -1386,6 +1386,32 @@ end
 -- Open menu
 -------------------------------------------------
 
+-------------------------------------------------
+-- Data injection helpers
+-------------------------------------------------
+
+local function safeJSON(data)
+    local json = util.TableToJSON(data)
+    json = string.gsub(json, "\\", "\\\\")
+    json = string.gsub(json, "'", "\\'")
+    json = string.gsub(json, "\n", "\\n")
+    json = string.gsub(json, "\r", "\\r")
+    return json
+end
+
+local function safeStr(str)
+    str = string.gsub(str, "\\", "\\\\")
+    str = string.gsub(str, "'", "\\'")
+    str = string.gsub(str, "\n", "\\n")
+    str = string.gsub(str, "\r", "\\r")
+    return str
+end
+
+local function queueJS(code)
+    if not IsValid(GambleBoard.DHTML) then return end
+    GambleBoard.DHTML:QueueJavascript(code)
+end
+
 function GambleBoard.OpenMenu()
     if IsValid(GambleBoard.MenuFrame) then
         GambleBoard.MenuFrame:Close()
@@ -1406,12 +1432,18 @@ function GambleBoard.OpenMenu()
     frame:MakePopup()
     frame:DockPadding(0, 0, 0, 0)
     frame.Paint = function() end
-    frame.OnKeyCodePressed = function(_, key)
-        if key == KEY_ESCAPE then
-            frame:Close()
-        end
-    end
     GambleBoard.MenuFrame = frame
+
+    hook.Add("PlayerBindPress", "GambleBoard_BlockESC", function(_, bind)
+        if string.find(bind, "cancelselect") and IsValid(frame) then
+            frame:Close()
+            return true
+        end
+    end)
+
+    frame.OnClose = function()
+        hook.Remove("PlayerBindPress", "GambleBoard_BlockESC")
+    end
 
     local dhtml = vgui.Create("DHTML", frame)
     dhtml:SetPos(0, 0)
@@ -1421,7 +1453,10 @@ function GambleBoard.OpenMenu()
 
     -- JS → Lua bridge
     dhtml:AddFunction("gb", "closeMenu", function()
-        if IsValid(frame) then frame:Close() end
+        if IsValid(frame) then
+            frame:Close()
+            timer.Simple(0, function() gui.HideGameUI() end)
+        end
     end)
 
     dhtml:AddFunction("gb", "saveParam", function(key, value)
@@ -1487,6 +1522,7 @@ function GambleBoard.OpenMenu()
     end)
 
     dhtml:SetHTML(BuildHTML())
+    dhtml:RequestFocus()
 
     -- Inject local SteamID
     dhtml:QueueJavascript("setLocalSteamID('" .. LocalPlayer():SteamID() .. "')")
@@ -1506,32 +1542,6 @@ function GambleBoard.OpenMenu()
     if hasAny then
         dhtml:QueueJavascript("restoreParams('" .. safeJSON(saved) .. "')")
     end
-end
-
--------------------------------------------------
--- Data injection helpers
--------------------------------------------------
-
-local function safeJSON(data)
-    local json = util.TableToJSON(data)
-    json = string.gsub(json, "\\", "\\\\")
-    json = string.gsub(json, "'", "\\'")
-    json = string.gsub(json, "\n", "\\n")
-    json = string.gsub(json, "\r", "\\r")
-    return json
-end
-
-local function safeStr(str)
-    str = string.gsub(str, "\\", "\\\\")
-    str = string.gsub(str, "'", "\\'")
-    str = string.gsub(str, "\n", "\\n")
-    str = string.gsub(str, "\r", "\\r")
-    return str
-end
-
-local function queueJS(code)
-    if not IsValid(GambleBoard.DHTML) then return end
-    GambleBoard.DHTML:QueueJavascript(code)
 end
 
 -------------------------------------------------
