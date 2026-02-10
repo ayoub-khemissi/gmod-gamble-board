@@ -116,6 +116,20 @@ GambleBoard.Config.AdminBypass = false
 GambleBoard.Config.MinPlayersOnline = 2
 
 --[[------------------------------------------------------------
+    RANKS (based on totalWon)
+--------------------------------------------------------------]]
+
+GambleBoard.Config.Ranks = {
+    { threshold = 0,        name = "Rookie",      icon = "fa-seedling" },
+    { threshold = 5000,     name = "Gambler",      icon = "fa-dice" },
+    { threshold = 25000,    name = "High Roller",  icon = "fa-diamond" },
+    { threshold = 100000,   name = "Shark",        icon = "fa-fish" },
+    { threshold = 500000,   name = "Mogul",        icon = "fa-gem" },
+    { threshold = 2000000,  name = "Tycoon",       icon = "fa-crown" },
+    { threshold = 10000000, name = "Legend",        icon = "fa-star" },
+}
+
+--[[------------------------------------------------------------
     CHAT COMMANDS
 --------------------------------------------------------------]]
 
@@ -224,6 +238,28 @@ GambleBoard.Config.UI = {
     BetAmount       = "Bet Amount",
     PlaceholderBet  = "100",
     Balance         = "Balance",
+
+    -- Stats / Leaderboard
+    TabStats        = "Stats",
+    StatsTitle      = "Your Statistics",
+    LbTitle         = "Leaderboard",
+    LbTopWinners    = "Top Winners",
+    LbTopLosers     = "Top Losers",
+    LbMostGames     = "Most Games",
+    LbNoData        = "No data yet. Start playing!",
+    LbYourPosition  = "Your Position",
+    SectionRank     = "Your Rank",
+    SectionStats    = "Personal Stats",
+    StatTotalWon    = "Total Won",
+    StatTotalLost   = "Total Lost",
+    StatProfit      = "Profit",
+    StatGamesPlayed = "Games Played",
+    StatBiggestWin  = "Biggest Win",
+    StatWinRate     = "Win Rate",
+    StatCoinGames   = "Coin Games",
+    StatCrashGames  = "Crash Games",
+    StatTowerGames  = "Tower Games",
+    StatWins        = "Wins",
 }
 
 --[[------------------------------------------------------------

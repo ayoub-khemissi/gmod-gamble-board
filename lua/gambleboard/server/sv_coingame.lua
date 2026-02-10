@@ -271,11 +271,10 @@ function GambleBoard.ResolveCoinFlip(lobbyId)
     end
 
     -- Record stats
-    GambleBoard.RecordWin(winnerSteamID, profit, "coin")
-    GambleBoard.RecordLoss(loserSteamID, lobby.amount, "coin")
-
-    -- Get winner name
     local winnerName = lobby.creatorSteamID == winnerSteamID and lobby.creatorName or lobby.opponentName
+    local loserName = lobby.creatorSteamID == loserSteamID and lobby.creatorName or lobby.opponentName
+    GambleBoard.RecordWin(winnerSteamID, profit, "coin", winnerName)
+    GambleBoard.RecordLoss(loserSteamID, lobby.amount, "coin", loserName)
 
     GambleBoard.BroadcastCoinUpdate(lobby, "update")
     GambleBoard.NotifyAll(string.format(GambleBoard.Lang.CoinWon, winnerName, GambleBoard.Config.CurrencySymbol, payout), "success")

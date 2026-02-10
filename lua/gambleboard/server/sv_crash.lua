@@ -229,7 +229,7 @@ function GambleBoard.CrashEnd()
     -- Process losers (anyone who didn't cash out)
     for _, bet in ipairs(round.bets) do
         if not bet.cashedOut then
-            GambleBoard.RecordLoss(bet.steamid, bet.amount, "crash")
+            GambleBoard.RecordLoss(bet.steamid, bet.amount, "crash", bet.name)
 
             local ply = player.GetBySteamID(bet.steamid)
             if IsValid(ply) then
@@ -346,7 +346,7 @@ function GambleBoard.CrashCashOut(ply)
     local profit = payout - bet.amount
     addPlayerMoney(ply, payout)
 
-    GambleBoard.RecordWin(sid, profit, "crash")
+    GambleBoard.RecordWin(sid, profit, "crash", ply:Nick())
 
     GambleBoard.NotifyPlayer(ply, string.format(GambleBoard.Lang.CrashCashedOut, round.currentMultiplier, GambleBoard.Config.CurrencySymbol, payout), "success")
     GambleBoard.BroadcastCrashState()

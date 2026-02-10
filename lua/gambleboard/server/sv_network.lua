@@ -26,6 +26,11 @@ util.AddNetworkString("GambleBoard_TowerJackpot")
 util.AddNetworkString("GambleBoard_RequestData")
 util.AddNetworkString("GambleBoard_SendData")
 
+-- Leaderboard / Stats
+util.AddNetworkString("GambleBoard_RequestLeaderboard")
+util.AddNetworkString("GambleBoard_SendLeaderboard")
+util.AddNetworkString("GambleBoard_SendPlayerStats")
+
 -------------------------------------------------
 -- Sender helpers
 -------------------------------------------------
@@ -99,4 +104,104 @@ net.Receive("GambleBoard_RequestData", function(len, ply)
 
     -- Send tower jackpot
     GambleBoard.SendTowerJackpot(ply)
+
+    -- Send player stats
+    GambleBoard.SendPlayerStats(ply)
+end)
+
+-------------------------------------------------
+-- Leaderboard
+-------------------------------------------------
+
+function GambleBoard.GetLeaderboard(category, limit)
+    limit = limit or 10
+    local entries = {}
+
+    for steamid, stats in pairs(GambleBoard.PlayerStats) do
+        local value = 0
+        if category == "totalWon" then
+            value = stats.totalWon or 0
+        elseif category == "totalLost" then
+            value = stats.totalLost or 0
+        elseif category == "gamesPlayed" then
+            value = stats.gamesPlayed or 0
+        end
+
+        table.insert(entries, {
+            steamid = steamid,
+            name = stats.name or "Unknown",
+            value = value,
+        })
+    end
+
+    table.sort(entries, function(a, b) return a.value > b.value end)
+
+    local top = {}
+    for i = 1, math.min(limit, #entries) do
+        entries[i].rank = i
+        table.insert(top, entries[i])
+    end
+
+    return top, entries
+end
+
+function GambleBoard.SendLeaderboard(ply, category)
+    local top, all = GambleBoard.GetLeaderboard(category, 10)
+    local sid = ply:SteamID()
+
+    -- Find player's position
+    local myRank = 0
+    local myValue = 0
+    for i, entry in ipairs(all) do
+        if entry.steamid == sid then
+            myRank = i
+            myValue = entry.value
+            break
+        end
+    end
+
+    local json = util.TableToJSON(top)
+
+    net.Start("GambleBoard_SendLeaderboard")
+        net.WriteString(category)
+        net.WriteString(json)
+        net.WriteInt(myRank, 32)
+        net.WriteInt(math.floor(myValue), 32)
+    net.Send(ply)
+end
+
+function GambleBoard.SendPlayerStats(ply)
+    local sid = ply:SteamID()
+    local stats = GambleBoard.GetPlayerStats(sid)
+
+    local data = {
+        totalWon = stats.totalWon,
+        totalLost = stats.totalLost,
+        gamesPlayed = stats.gamesPlayed,
+        biggestWin = stats.biggestWin,
+        coinGames = stats.coinGames,
+        coinWins = stats.coinWins,
+        coinWon = stats.coinWon or 0,
+        coinLost = stats.coinLost or 0,
+        crashGames = stats.crashGames,
+        crashWins = stats.crashWins,
+        crashWon = stats.crashWon or 0,
+        crashLost = stats.crashLost or 0,
+        towerGames = stats.towerGames,
+        towerWins = stats.towerWins,
+        towerWon = stats.towerWon or 0,
+        towerLost = stats.towerLost or 0,
+    }
+
+    net.Start("GambleBoard_SendPlayerStats")
+        net.WriteString(util.TableToJSON(data))
+    net.Send(ply)
+end
+
+net.Receive("GambleBoard_RequestLeaderboard", function(len, ply)
+    local category = net.ReadString()
+    if category ~= "totalWon" and category ~= "totalLost" and category ~= "gamesPlayed" then
+        category = "totalWon"
+    end
+    GambleBoard.SendLeaderboard(ply, category)
 end)

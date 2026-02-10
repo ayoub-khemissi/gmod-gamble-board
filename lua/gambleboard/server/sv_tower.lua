@@ -185,7 +185,7 @@ function GambleBoard.TowerPickDoor(ply, doorIndex)
         local jackpotAmount = math.floor(session.amount * GambleBoard.Config.TowerJackpotPercent / 100)
         GambleBoard.AddToJackpot(jackpotAmount)
 
-        GambleBoard.RecordLoss(sid, session.amount, "tower")
+        GambleBoard.RecordLoss(sid, session.amount, "tower", ply:Nick())
 
         GambleBoard.NotifyPlayer(ply, string.format(GambleBoard.Lang.TowerFell, floor, GambleBoard.Config.CurrencySymbol, session.amount), "error")
         GambleBoard.SendTowerState(ply)
@@ -211,7 +211,7 @@ function GambleBoard.TowerPickDoor(ply, doorIndex)
             local totalPayout = payout + jackpotBonus
 
             addPlayerMoney(ply, totalPayout)
-            GambleBoard.RecordWin(sid, totalPayout - session.amount, "tower")
+            GambleBoard.RecordWin(sid, totalPayout - session.amount, "tower", ply:Nick())
 
             GambleBoard.NotifyAll(string.format(GambleBoard.Lang.TowerJackpot, ply:Nick(), GambleBoard.Config.CurrencySymbol, totalPayout), "success")
             GambleBoard.SendTowerState(ply)
@@ -270,7 +270,7 @@ function GambleBoard.TowerCashOut(ply)
     addPlayerMoney(ply, payout)
     local profit = payout - session.amount
     if profit > 0 then
-        GambleBoard.RecordWin(sid, profit, "tower")
+        GambleBoard.RecordWin(sid, profit, "tower", ply:Nick())
     end
 
     GambleBoard.NotifyPlayer(ply, string.format(GambleBoard.Lang.TowerCashedOut, clearedFloor, GambleBoard.Config.CurrencySymbol, payout), "success")

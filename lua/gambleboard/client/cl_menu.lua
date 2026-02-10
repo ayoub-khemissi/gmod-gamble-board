@@ -94,6 +94,9 @@ tailwind.config = {
             <button class="rounded-full bg-gb-card text-gb-text2 border border-gb-border px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all duration-150 hover:bg-gb-card2 hover:text-gb-text hover:border-gb-border2" onclick="switchTab('tower')" id="tab-tower">
                 <i class="fa-solid fa-tower-observation text-xs"></i> {{TabTower}}
             </button>
+            <button class="rounded-full bg-gb-card text-gb-text2 border border-gb-border px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all duration-150 hover:bg-gb-card2 hover:text-gb-text hover:border-gb-border2" onclick="switchTab('stats')" id="tab-stats">
+                <i class="fa-solid fa-chart-bar text-xs"></i> {{TabStats}}
+            </button>
         </div>
         <button onclick="gb.closeMenu()" class="w-9 h-9 rounded-lg flex items-center justify-center text-gb-text2 hover:text-gb-text hover:bg-white/10 transition shrink-0">
             <i class="fa-solid fa-xmark text-lg"></i>
@@ -308,6 +311,148 @@ tailwind.config = {
             </div>
         </div>
 
+        <!-- ==================== STATS TAB ==================== -->
+        <div id="page-stats" class="h-full overflow-y-auto px-8 py-6 hidden">
+            <div class="flex gap-6">
+                <!-- Left: Personal stats + Rank -->
+                <div class="flex-1">
+                    <!-- Personal Stats -->
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-lg font-bold text-gb-title flex items-center gap-2">
+                            <i class="fa-solid fa-chart-bar text-gb-accent text-sm"></i> {{StatsTitle}}
+                        </h2>
+                        <button onclick="refreshStats()" id="btn-refresh-stats" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-gray-900 border border-white/80 hover:bg-gray-100 transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Refresh
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3 mb-6">
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatTotalWon}}</div>
+                            <div id="stat-totalWon" class="text-lg font-black text-gb-success">$0</div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatTotalLost}}</div>
+                            <div id="stat-totalLost" class="text-lg font-black text-gb-danger">$0</div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatProfit}}</div>
+                            <div id="stat-profit" class="text-lg font-black text-gb-accent">$0</div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatGamesPlayed}}</div>
+                            <div id="stat-gamesPlayed" class="text-lg font-black text-gb-text">0</div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatBiggestWin}}</div>
+                            <div id="stat-biggestWin" class="text-lg font-black text-yellow-400">$0</div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50 text-center">
+                            <div class="text-xs font-bold text-gb-text2 mb-1">{{StatWinRate}}</div>
+                            <div id="stat-winRate" class="text-lg font-black text-gb-accent">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Rank -->
+                    <div class="border border-gb-border rounded-xl p-5 bg-gb-card/50 mb-6">
+                        <div class="text-xs font-bold text-gb-text2 tracking-wider mb-3">{{SectionRank}}</div>
+                        <div class="flex items-center gap-4 mb-3">
+                            <div id="rank-icon" class="w-14 h-14 rounded-full bg-gb-accent/20 flex items-center justify-center">
+                                <i id="rank-icon-i" class="fa-solid fa-seedling text-gb-accent text-2xl"></i>
+                            </div>
+                            <div>
+                                <div id="rank-name" class="text-xl font-black text-gb-accent">Rookie</div>
+                                <div id="rank-threshold" class="text-xs text-gb-text2">$0 won</div>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <div class="w-full h-3 rounded-full bg-gb-bg overflow-hidden border border-gb-border">
+                                <div id="rank-progress-bar" class="h-full rounded-full bg-gradient-to-r from-gb-accent to-gb-accentlt transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span id="rank-current-label" class="text-[10px] text-gb-text2">Rookie</span>
+                                <span id="rank-next-label" class="text-[10px] text-gb-text2">Gambler ($5,000)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Per-game stats -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fa-solid fa-coins text-yellow-400 text-sm"></i>
+                                <span class="text-sm font-bold text-gb-text">Coin Duel</span>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatCoinGames}}</span><span id="stat-coinGames" class="font-bold text-gb-text">0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatWins}}</span><span id="stat-coinWins" class="font-bold text-gb-success">0</span></div>
+                                <div class="h-px bg-gb-border/50 my-1"></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalWon}}</span><span id="stat-coinWon" class="font-bold text-gb-success">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalLost}}</span><span id="stat-coinLost" class="font-bold text-gb-danger">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatProfit}}</span><span id="stat-coinProfit" class="font-bold text-gb-accent">$0</span></div>
+                            </div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fa-solid fa-chart-line text-gb-accent text-sm"></i>
+                                <span class="text-sm font-bold text-gb-text">Crash</span>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatCrashGames}}</span><span id="stat-crashGames" class="font-bold text-gb-text">0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatWins}}</span><span id="stat-crashWins" class="font-bold text-gb-success">0</span></div>
+                                <div class="h-px bg-gb-border/50 my-1"></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalWon}}</span><span id="stat-crashWon" class="font-bold text-gb-success">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalLost}}</span><span id="stat-crashLost" class="font-bold text-gb-danger">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatProfit}}</span><span id="stat-crashProfit" class="font-bold text-gb-accent">$0</span></div>
+                            </div>
+                        </div>
+                        <div class="border border-gb-border rounded-xl p-4 bg-gb-card/50">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fa-solid fa-tower-observation text-gb-info text-sm"></i>
+                                <span class="text-sm font-bold text-gb-text">Tower</span>
+                            </div>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTowerGames}}</span><span id="stat-towerGames" class="font-bold text-gb-text">0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatWins}}</span><span id="stat-towerWins" class="font-bold text-gb-success">0</span></div>
+                                <div class="h-px bg-gb-border/50 my-1"></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalWon}}</span><span id="stat-towerWon" class="font-bold text-gb-success">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatTotalLost}}</span><span id="stat-towerLost" class="font-bold text-gb-danger">$0</span></div>
+                                <div class="flex justify-between"><span class="text-gb-text2">{{StatProfit}}</span><span id="stat-towerProfit" class="font-bold text-gb-accent">$0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Leaderboard -->
+                <div class="w-80 shrink-0">
+                    <h3 class="text-xs font-bold text-gb-text2 tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-trophy text-gb-accent"></i> {{LbTitle}}
+                    </h3>
+
+                    <!-- Category pills -->
+                    <div class="flex gap-1 mb-4">
+                        <button onclick="switchLeaderboardCategory('totalWon')" id="lb-pill-totalWon" class="px-3 py-1.5 rounded-full text-xs font-bold bg-gb-accent text-gb-bg border border-gb-accent transition">{{LbTopWinners}}</button>
+                        <button onclick="switchLeaderboardCategory('totalLost')" id="lb-pill-totalLost" class="px-3 py-1.5 rounded-full text-xs font-bold bg-gb-card text-gb-text2 border border-gb-border transition hover:bg-gb-card2">{{LbTopLosers}}</button>
+                        <button onclick="switchLeaderboardCategory('gamesPlayed')" id="lb-pill-gamesPlayed" class="px-3 py-1.5 rounded-full text-xs font-bold bg-gb-card text-gb-text2 border border-gb-border transition hover:bg-gb-card2">{{LbMostGames}}</button>
+                    </div>
+
+                    <!-- Leaderboard table -->
+                    <div id="lb-table" class="space-y-1.5">
+                        <div class="text-center text-gb-text2 text-sm py-8">{{LbNoData}}</div>
+                    </div>
+
+                    <!-- Your position -->
+                    <div id="lb-my-position" class="hidden mt-4 border border-gb-accent/30 rounded-xl p-3 bg-gb-accent/5">
+                        <div class="text-[10px] font-bold text-gb-text2 tracking-wider mb-1">{{LbYourPosition}}</div>
+                        <div class="flex items-center justify-between">
+                            <span id="lb-my-rank" class="text-sm font-bold text-gb-accent">#-</span>
+                            <span id="lb-my-value" class="text-sm font-bold text-gb-text">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
   </div>
 </div>
@@ -358,6 +503,13 @@ let crashAnimFrame = null;
 // Tower state
 let towerState = null;
 
+// Stats state
+let playerStats = null;
+let currentLbCategory = 'totalWon';
+let leaderboardData = {};
+
+const RANKS = {{RanksJSON}};
+
 // ========================================================
 // UTIL
 // ========================================================
@@ -374,7 +526,7 @@ const TAB_INACTIVE = ['bg-gb-card','text-gb-text2','border-gb-border','font-medi
 function switchTab(tab) {
     currentTab = tab;
     gb.saveParam('tab', tab);
-    ['coin','crash','tower'].forEach(t => {
+    ['coin','crash','tower','stats'].forEach(t => {
         document.getElementById('page-' + t).classList.toggle('hidden', t !== tab);
         let btn = document.getElementById('tab-' + t);
         if (t === tab) {
@@ -386,6 +538,10 @@ function switchTab(tab) {
         }
     });
     if (tab === 'crash') initCrashCanvas();
+    if (tab === 'stats') {
+        renderMyStats();
+        gb.requestLeaderboard(currentLbCategory);
+    }
 }
 
 // ========================================================
@@ -860,6 +1016,145 @@ function resetTower() {
 }
 
 // ========================================================
+// STATS / LEADERBOARD
+// ========================================================
+
+function getRank(totalWon) {
+    let rank = RANKS[0];
+    for (let i = RANKS.length - 1; i >= 0; i--) {
+        if (totalWon >= RANKS[i].threshold) { rank = RANKS[i]; break; }
+    }
+    return rank;
+}
+
+function getNextRank(totalWon) {
+    for (let i = 0; i < RANKS.length; i++) {
+        if (totalWon < RANKS[i].threshold) return RANKS[i];
+    }
+    return null;
+}
+
+function renderMyStats() {
+    if (!playerStats) return;
+    let s = playerStats;
+    let profit = s.totalWon - s.totalLost;
+    let totalWins = (s.coinWins || 0) + (s.crashWins || 0) + (s.towerWins || 0);
+    let winRate = s.gamesPlayed > 0 ? Math.round((totalWins / s.gamesPlayed) * 100) : 0;
+
+    document.getElementById('stat-totalWon').textContent = CFG.currency + formatNumber(s.totalWon);
+    document.getElementById('stat-totalLost').textContent = CFG.currency + formatNumber(s.totalLost);
+
+    let profitEl = document.getElementById('stat-profit');
+    profitEl.textContent = (profit >= 0 ? '+' : '-') + CFG.currency + formatNumber(Math.abs(profit));
+    profitEl.className = 'text-lg font-black ' + (profit >= 0 ? 'text-gb-success' : 'text-gb-danger');
+
+    document.getElementById('stat-gamesPlayed').textContent = formatNumber(s.gamesPlayed);
+    document.getElementById('stat-biggestWin').textContent = CFG.currency + formatNumber(s.biggestWin);
+    document.getElementById('stat-winRate').textContent = winRate + '%';
+
+    document.getElementById('stat-coinGames').textContent = s.coinGames || 0;
+    document.getElementById('stat-coinWins').textContent = s.coinWins || 0;
+    document.getElementById('stat-crashGames').textContent = s.crashGames || 0;
+    document.getElementById('stat-crashWins').textContent = s.crashWins || 0;
+    document.getElementById('stat-towerGames').textContent = s.towerGames || 0;
+    document.getElementById('stat-towerWins').textContent = s.towerWins || 0;
+
+    // Per-game won/lost/profit
+    ['coin','crash','tower'].forEach(g => {
+        let won = s[g + 'Won'] || 0;
+        let lost = s[g + 'Lost'] || 0;
+        let gProfit = won - lost;
+        document.getElementById('stat-' + g + 'Won').textContent = CFG.currency + formatNumber(won);
+        document.getElementById('stat-' + g + 'Lost').textContent = CFG.currency + formatNumber(lost);
+        let profitEl = document.getElementById('stat-' + g + 'Profit');
+        profitEl.textContent = (gProfit >= 0 ? '+' : '-') + CFG.currency + formatNumber(Math.abs(gProfit));
+        profitEl.className = 'font-bold ' + (gProfit >= 0 ? 'text-gb-success' : 'text-gb-danger');
+    });
+
+    // Rank
+    let rank = getRank(s.totalWon);
+    let nextRank = getNextRank(s.totalWon);
+
+    document.getElementById('rank-icon-i').className = 'fa-solid ' + rank.icon + ' text-gb-accent text-2xl';
+    document.getElementById('rank-name').textContent = rank.name;
+    document.getElementById('rank-threshold').textContent = CFG.currency + formatNumber(s.totalWon) + ' won';
+
+    if (nextRank) {
+        let progress = ((s.totalWon - rank.threshold) / (nextRank.threshold - rank.threshold)) * 100;
+        progress = Math.max(0, Math.min(100, progress));
+        document.getElementById('rank-progress-bar').style.width = progress + '%';
+        document.getElementById('rank-current-label').textContent = rank.name;
+        document.getElementById('rank-next-label').textContent = nextRank.name + ' (' + CFG.currency + formatNumber(nextRank.threshold) + ')';
+    } else {
+        document.getElementById('rank-progress-bar').style.width = '100%';
+        document.getElementById('rank-current-label').textContent = rank.name;
+        document.getElementById('rank-next-label').textContent = 'MAX RANK';
+    }
+}
+
+function refreshStats() {
+    let icon = document.querySelector('#btn-refresh-stats i');
+    icon.classList.add('animate-spin');
+    gb.refreshStats();
+    setTimeout(() => { icon.classList.remove('animate-spin'); }, 1000);
+}
+
+function switchLeaderboardCategory(cat) {
+    currentLbCategory = cat;
+    ['totalWon','totalLost','gamesPlayed'].forEach(c => {
+        let pill = document.getElementById('lb-pill-' + c);
+        if (c === cat) {
+            pill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-gb-accent text-gb-bg border border-gb-accent transition';
+        } else {
+            pill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-gb-card text-gb-text2 border border-gb-border transition hover:bg-gb-card2';
+        }
+    });
+    gb.requestLeaderboard(cat);
+}
+
+function renderLeaderboard(entries, myRank, myValue) {
+    let container = document.getElementById('lb-table');
+    let myPos = document.getElementById('lb-my-position');
+
+    if (!entries || entries.length === 0) {
+        container.innerHTML = '<div class="text-center text-gb-text2 text-sm py-8">{{LbNoData}}</div>';
+        myPos.classList.add('hidden');
+        return;
+    }
+
+    let isCurrency = currentLbCategory !== 'gamesPlayed';
+    let medals = ['', 'text-yellow-400', 'text-gray-400', 'text-amber-600'];
+    let medalIcons = ['', 'fa-crown', 'fa-medal', 'fa-medal'];
+
+    container.innerHTML = entries.map((e, i) => {
+        let rank = i + 1;
+        let isMe = e.steamid === localSteamID;
+        let borderCls = isMe ? 'border-gb-accent bg-gb-accent/5' : 'border-gb-border bg-gb-card/50';
+        let valueStr = isCurrency ? CFG.currency + formatNumber(e.value) : formatNumber(e.value);
+        let medalHtml = rank <= 3 ? '<i class="fa-solid ' + medalIcons[rank] + ' ' + medals[rank] + '"></i>' : '<span class="text-gb-text2 text-xs font-bold">#' + rank + '</span>';
+
+        return '<div class="flex items-center gap-3 border ' + borderCls + ' rounded-lg px-3 py-2.5 transition">' +
+            '<div class="w-6 text-center shrink-0">' + medalHtml + '</div>' +
+            '<div class="flex-1 min-w-0"><div class="text-sm font-bold text-gb-text truncate">' + escHtml(e.name) + '</div></div>' +
+            '<div class="text-sm font-bold ' + (isMe ? 'text-gb-accent' : 'text-gb-text') + ' shrink-0">' + valueStr + '</div>' +
+        '</div>';
+    }).join('');
+
+    // Show player position if not in top 10
+    if (myRank > 10 && myRank > 0) {
+        myPos.classList.remove('hidden');
+        document.getElementById('lb-my-rank').textContent = '#' + myRank;
+        document.getElementById('lb-my-value').textContent = isCurrency ? CFG.currency + formatNumber(myValue) : formatNumber(myValue);
+    } else if (myRank > 0) {
+        myPos.classList.add('hidden');
+    } else {
+        myPos.classList.remove('hidden');
+        document.getElementById('lb-my-rank').textContent = 'Unranked';
+        document.getElementById('lb-my-value').textContent = '-';
+    }
+}
+
+// ========================================================
 // DATA INJECTION (called from Lua)
 // ========================================================
 
@@ -949,6 +1244,26 @@ function setTowerState(json) {
 
 function setTowerJackpot(amount) {
     document.getElementById('tower-jackpot-amount').textContent = CFG.currency + formatNumber(amount);
+}
+
+// -- Stats / Leaderboard --
+function setPlayerStats(json) {
+    playerStats = JSON.parse(json);
+    renderMyStats();
+}
+
+function setLeaderboard(json, cat, myRank, myValue) {
+    let entries = JSON.parse(json);
+    currentLbCategory = cat;
+    ['totalWon','totalLost','gamesPlayed'].forEach(c => {
+        let pill = document.getElementById('lb-pill-' + c);
+        if (c === cat) {
+            pill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-gb-accent text-gb-bg border border-gb-accent transition';
+        } else {
+            pill.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-gb-card text-gb-text2 border border-gb-border transition hover:bg-gb-card2';
+        }
+    });
+    renderLeaderboard(entries, myRank, myValue);
 }
 
 // ========================================================
@@ -1046,8 +1361,20 @@ local function BuildHTML()
     -- Build tower multipliers JSON
     local multJSON = util.TableToJSON(GambleBoard.Config.TowerMultipliers)
 
+    -- Build ranks JSON for JS
+    local ranksForJS = {}
+    for i, rank in ipairs(GambleBoard.Config.Ranks) do
+        table.insert(ranksForJS, {
+            threshold = rank.threshold,
+            name = rank.name,
+            icon = rank.icon,
+        })
+    end
+    local ranksJSON = util.TableToJSON(ranksForJS)
+
     local html = HTML_TEMPLATE
     html = string.Replace(html, "{{TowerMultipliersJSON}}", multJSON)
+    html = string.Replace(html, "{{RanksJSON}}", ranksJSON)
     html = string.gsub(html, "{{(%w+)}}", function(key)
         return replacements[key] or key
     end)
@@ -1148,6 +1475,17 @@ function GambleBoard.OpenMenu()
         net.SendToServer()
     end)
 
+    dhtml:AddFunction("gb", "requestLeaderboard", function(category)
+        net.Start("GambleBoard_RequestLeaderboard")
+            net.WriteString(category or "totalWon")
+        net.SendToServer()
+    end)
+
+    dhtml:AddFunction("gb", "refreshStats", function()
+        net.Start("GambleBoard_RequestData")
+        net.SendToServer()
+    end)
+
     dhtml:SetHTML(BuildHTML())
 
     -- Inject local SteamID
@@ -1233,6 +1571,21 @@ end)
 net.Receive("GambleBoard_TowerJackpot", function()
     local amount = net.ReadInt(32)
     queueJS("setTowerJackpot(" .. amount .. ")")
+end)
+
+-- Player stats
+net.Receive("GambleBoard_SendPlayerStats", function()
+    local json = net.ReadString()
+    queueJS("setPlayerStats('" .. string.gsub(json, "'", "\\'") .. "')")
+end)
+
+-- Leaderboard
+net.Receive("GambleBoard_SendLeaderboard", function()
+    local category = net.ReadString()
+    local json = net.ReadString()
+    local myRank = net.ReadInt(32)
+    local myValue = net.ReadInt(32)
+    queueJS("setLeaderboard('" .. string.gsub(json, "'", "\\'") .. "', '" .. category .. "', " .. myRank .. ", " .. myValue .. ")")
 end)
 
 -------------------------------------------------
