@@ -95,7 +95,7 @@ tailwind.config = {
                 <i class="fa-solid fa-tower-observation text-xs"></i> {{TabTower}}
             </button>
             <button class="rounded-full bg-gb-card text-gb-text2 border border-gb-border px-4 py-1.5 text-sm font-medium flex items-center gap-2 transition-all duration-150 hover:bg-gb-card2 hover:text-gb-text hover:border-gb-border2" onclick="switchTab('stats')" id="tab-stats">
-                <i class="fa-solid fa-chart-bar text-xs"></i> {{TabStats}}
+                <i class="fa-solid fa-trophy text-xs"></i> {{TabStats}}
             </button>
         </div>
         <button onclick="gb.closeMenu()" class="w-9 h-9 rounded-lg flex items-center justify-center bg-black text-white hover:bg-white hover:text-black transition shrink-0">
@@ -539,8 +539,7 @@ function switchTab(tab) {
     });
     if (tab === 'crash') initCrashCanvas();
     if (tab === 'stats') {
-        renderMyStats();
-        gb.requestLeaderboard(currentLbCategory);
+        refreshStats();
     }
 }
 
